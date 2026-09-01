@@ -199,8 +199,8 @@ class ItcSubmitForm {
         // Отправляем на WordPress AJAX
         const formData = this._getFormData();
         formData.append('action', 'form_feedback');
-        formData.append('page_title', document.title); // ✅ Добавлено
-        formData.append('page_url', window.location.href); // ✅ Добавлено
+        formData.append('page_title', document.title); 
+        formData.append('page_url', window.location.href); 
         
         // Добавляем UTM-метки
         const utmData = getUtmData();
@@ -351,8 +351,8 @@ function initCalculator() {
         // Собираем данные
         const formData = new FormData(form);
         formData.append('action', 'form_calculator');
-        formData.append('page_title', document.title); // ✅ Добавлено
-        formData.append('page_url', window.location.href); // ✅ Добавлено
+        formData.append('page_title', document.title); 
+        formData.append('page_url', window.location.href); 
         
         // Добавляем UTM-метки
         const utmData = getUtmData();
@@ -449,8 +449,8 @@ function openFormPhone() {
     var ajaxData = {
         action: 'formPhone',
         phone: phone,
-        page_title: document.title, // ✅ Добавлено
-        page_url: window.location.href // ✅ Добавлено
+        page_title: document.title, 
+        page_url: window.location.href 
     };
     Object.assign(ajaxData, utmData);
     
