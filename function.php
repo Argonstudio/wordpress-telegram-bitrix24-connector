@@ -339,7 +339,8 @@ function slomcom_send_bitrix24($name, $phone, $comment, $source_description, $ut
                 'VALUE_TYPE' => 'WORK'
             ]
         ],
-    ];
+    ];    
+    
     
     if (!empty($utm_data['utm_source'])) {
         $fields['UTM_SOURCE'] = $utm_data['utm_source'];
@@ -356,6 +357,14 @@ function slomcom_send_bitrix24($name, $phone, $comment, $source_description, $ut
     if (!empty($utm_data['utm_term'])) {
         $fields['UTM_TERM'] = $utm_data['utm_term'];
     }
+
+   // Roistat
+    $roistat_visit = get_roistat_visit();
+    if ($roistat_visit !== '') {
+        $fields['код'] = $roistat_visit;
+        // Страховка: дублируем в комментарий
+        $fields['COMMENTS'] .= "\nRoistat visit: " . $roistat_visit;
+    }     
     
     $url = $webhook_url . 'crm.lead.add.json';
     
