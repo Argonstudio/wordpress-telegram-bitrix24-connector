@@ -62,6 +62,14 @@ function form_feedback_callback() {
       'result' => 'success'
     ];
 
+    if (isset($_POST['captcha'])) {
+        session_start();
+        if (empty($_SESSION['captcha']) || $_POST['captcha'] !== $_SESSION['captcha']) {
+            $data['result'] = 'error';
+            $data['errors']['captcha'] = 'Код не соответствует изображению';
+        }
+    }
+
     // валидация name
     if (!empty($_POST['name'])) {
       $data['form']['name'] = htmlspecialchars($_POST['name']);
