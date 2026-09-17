@@ -12,7 +12,7 @@
  */
 
 // ============================================================
-// Класс обработки форм (для формы в подвале и любых других)
+// Класс обработки форм
 // ============================================================
 class ItcSubmitForm {
     static instances = [];
@@ -208,7 +208,7 @@ class ItcSubmitForm {
             formData.append(key, utmData[key]);
         });
 
-        // ✅ Roistat — ждём cookie и отправляем
+        // Roistat — ждём cookie и отправляем
         const self = this;
         waitRoistatVisit().then(function (visitId) {
             if (visitId) formData.append('roistat', visitId);
@@ -392,7 +392,7 @@ function initCalculator() {
             formData.append(key, utmData[key]);
         });
 
-        // ✅ Roistat
+        // Roistat
         waitRoistatVisit().then(function (visitId) {
             if (visitId) formData.append('roistat', visitId);
 
@@ -490,7 +490,7 @@ function openFormPhone() {
     };
     Object.assign(ajaxData, utmData);
 
-    // ✅ Roistat
+    // Roistat
     waitRoistatVisit().then(function (visitId) {
         if (visitId) ajaxData.roistat = visitId;
 
