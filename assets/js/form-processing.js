@@ -199,42 +199,47 @@ class ItcSubmitForm {
         // Отправляем на WordPress AJAX
         const formData = this._getFormData();
         formData.append('action', 'form_feedback');
-        formData.append('page_title', document.title); 
-        formData.append('page_url', window.location.href); 
+        formData.append('page_title', document.title);
+        formData.append('page_url', window.location.href);
         
         // Добавляем UTM-метки
         const utmData = getUtmData();
         Object.keys(utmData).forEach(key => {
             formData.append(key, utmData[key]);
         });
-    
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/wp-admin/admin-ajax.php');
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.responseType = 'json';
-    
-        xhr.onload = () => {
-            submitBtn.textContent = this._submitText;
-            submitBtn.disabled = false;
-            submitBtn.style.width = '';
-            submitBtn.style.height = '';
-    
-            if (xhr.status == 200) {
-                this._successXHR(xhr.response);
-            } else {
-                this._errorXHR();
-            }
-        };
-    
-        xhr.onerror = () => {
-            submitBtn.textContent = this._submitText;
-            submitBtn.disabled = false;
-            submitBtn.style.width = '';
-            submitBtn.style.height = '';
-            this._errorXHR();
-        };
-    
-        xhr.send(formData);
+
+        // ✅ Roistat — ждём cookie и отправляем
+        const self = this;
+        waitRoistatVisit().then(function (visitId) {
+            if (visitId) formData.append('roistat', visitId);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/wp-admin/admin-ajax.php');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.responseType = 'json';
+
+            xhr.onload = () => {
+                submitBtn.textContent = self._submitText;
+                submitBtn.disabled = false;
+                submitBtn.style.width = '';
+                submitBtn.style.height = '';
+                if (xhr.status == 200) {
+                    self._successXHR(xhr.response);
+                } else {
+                    self._errorXHR();
+                }
+            };
+
+            xhr.onerror = () => {
+                submitBtn.textContent = self._submitText;
+                submitBtn.disabled = false;
+                submitBtn.style.width = '';
+                submitBtn.style.height = '';
+                self._errorXHR();
+            };
+
+            xhr.send(formData);
+        });
     }
 
     // Инициализация
@@ -300,6 +305,33 @@ function getUtmData() {
 }
 
 // ============================================================
+// Roistat — получение номера визита
+// ============================================================
+function getRoistatVisit() {
+    var m = document.cookie.match(/(?:^|; )roistat_visit=([^;]*)/);
+    if (m) return decodeURIComponent(m[1]);
+    if (typeof window.roistatGetCookie === "function") {
+        var id = window.roistatGetCookie("roistat_visit");
+        if (id) return String(id);
+    }
+    return "";
+}
+
+function waitRoistatVisit(timeoutMs) {
+    timeoutMs = timeoutMs || 2500;
+    var existing = getRoistatVisit();
+    if (existing) return Promise.resolve(existing);
+    var start = Date.now();
+    return new Promise(function (resolve) {
+        (function tick() {
+            var id = getRoistatVisit();
+            if (id || Date.now() - start >= timeoutMs) resolve(id || "");
+            else setTimeout(tick, 150);
+        })();
+    });
+}
+
+// ============================================================
 // Инициализация
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -351,52 +383,56 @@ function initCalculator() {
         // Собираем данные
         const formData = new FormData(form);
         formData.append('action', 'form_calculator');
-        formData.append('page_title', document.title); 
-        formData.append('page_url', window.location.href); 
+        formData.append('page_title', document.title);
+        formData.append('page_url', window.location.href);
         
         // Добавляем UTM-метки
         const utmData = getUtmData();
         Object.keys(utmData).forEach(key => {
             formData.append(key, utmData[key]);
         });
-    
-        // Отправляем через XMLHttpRequest
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/wp-admin/admin-ajax.php', true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    const data = JSON.parse(xhr.responseText);
-                    if (data.status === 'success') {
-                        resultBlock.textContent = 'Форма отправлена';
-                        resultBlock.style.display = 'block';
-                        resultBlock.style.color = 'green';
-                    } else {
-                        resultBlock.textContent = data.message || 'Ошибка отправки';
+
+        // ✅ Roistat
+        waitRoistatVisit().then(function (visitId) {
+            if (visitId) formData.append('roistat', visitId);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/wp-admin/admin-ajax.php', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.status === 'success') {
+                            resultBlock.textContent = 'Форма отправлена';
+                            resultBlock.style.display = 'block';
+                            resultBlock.style.color = 'green';
+                        } else {
+                            resultBlock.textContent = data.message || 'Ошибка отправки';
+                            resultBlock.style.display = 'block';
+                            resultBlock.style.color = 'red';
+                        }
+                    } catch (e) {
+                        resultBlock.textContent = 'Ошибка обработки ответа';
                         resultBlock.style.display = 'block';
                         resultBlock.style.color = 'red';
                     }
-                } catch (e) {
-                    resultBlock.textContent = 'Ошибка обработки ответа';
+                } else {
+                    resultBlock.textContent = 'Ошибка сервера';
                     resultBlock.style.display = 'block';
                     resultBlock.style.color = 'red';
                 }
-            } else {
-                resultBlock.textContent = 'Ошибка сервера';
+            };
+
+            xhr.onerror = function() {
+                resultBlock.textContent = 'Ошибка сети';
                 resultBlock.style.display = 'block';
                 resultBlock.style.color = 'red';
-            }
-        };
-        
-        xhr.onerror = function() {
-            resultBlock.textContent = 'Ошибка сети';
-            resultBlock.style.display = 'block';
-            resultBlock.style.color = 'red';
-        };
-        
-        xhr.send(formData);
+            };
+
+            xhr.send(formData);
+        });
     });
 }
 
@@ -449,24 +485,29 @@ function openFormPhone() {
     var ajaxData = {
         action: 'formPhone',
         phone: phone,
-        page_title: document.title, 
-        page_url: window.location.href 
+        page_title: document.title,
+        page_url: window.location.href
     };
     Object.assign(ajaxData, utmData);
-    
-    $.ajax({
-        url: "/wp-admin/admin-ajax.php",
-        data: ajaxData,
-        type: 'POST',
-        success: function(response) {
-            blockResult.textContent = "Сообщение отправлено";  
-            blockResult.style.display = 'block';
-            blockResult.style.color = 'green';
-        },
-        error: function(data) {
-            blockResult.textContent = "Ошибка сервера";  
-            blockResult.style.display = 'block';
-            blockResult.style.color = 'red';
-        }
+
+    // ✅ Roistat
+    waitRoistatVisit().then(function (visitId) {
+        if (visitId) ajaxData.roistat = visitId;
+
+        $.ajax({
+            url: "/wp-admin/admin-ajax.php",
+            data: ajaxData,
+            type: 'POST',
+            success: function(response) {
+                blockResult.textContent = "Сообщение отправлено";
+                blockResult.style.display = 'block';
+                blockResult.style.color = 'green';
+            },
+            error: function(data) {
+                blockResult.textContent = "Ошибка сервера";
+                blockResult.style.display = 'block';
+                blockResult.style.color = 'red';
+            }
+        });
     });
 }
