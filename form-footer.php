@@ -66,7 +66,7 @@
                 <!-- Капча -->
                 <div class="form-group form-captcha">
                     
-                  <img class="form-captcha__image" src="https://slomcom.ru/wp-content/themes/slomcom/assets/captcha/captcha.php" data-src="https://slomcom.ru/wp-content/themes/slomcom/assets/captcha/captcha.php"
+                  <img class="form-captcha__image" src="URL"
                     width="132" height="46" alt="Капча">
                     
                   <div class="form-captcha__refresh">
