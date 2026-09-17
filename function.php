@@ -358,7 +358,7 @@ function slomcom_send_bitrix24($name, $phone, $comment, $source_description, $ut
         $fields['UTM_TERM'] = $utm_data['utm_term'];
     }
 
-   // Roistat
+   // Roistat для отправки в Битрикс24
     $roistat_visit = get_roistat_visit();
     if ($roistat_visit !== '') {
         $fields['код'] = $roistat_visit;
